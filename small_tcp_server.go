@@ -6,6 +6,7 @@ import (
     "io"
     "io/ioutil"
     "time"
+    "flag"
 )
 
 const(
@@ -19,13 +20,12 @@ func checkErr(err error) {
   }
 }
 
-func handleConnection(conn net.Conn) {
+func handleConnection(conn net.Conn, storePath string) {
   msg := make([]byte, tmpBufSize)
   buff := []byte{}
   defer conn.Close()
   for {
     n, err := conn.Read(msg)
-    //fmt.Println(n, string(msg[:n]))
     if (err != nil) && (err != io.EOF)  {
       // Quit as we recieved io.EOF
       panic(err)
@@ -35,23 +35,27 @@ func handleConnection(conn net.Conn) {
     }
     buff = append(buff, msg[:n]...)
   }
-//  fmt.Println(string(buff))
-//  fmt.Println(len(buff))
 
 // Write to file
-  fmt.Println(time.Now())
-  ioutil.WriteFile("test_file", buff, 0777)
+  //fmt.Println(time.Now().Unix())
+  filename := "data" + string(time.Now().Unix())
+  ioutil.WriteFile(storePath + filename, buff, 0777)
 }
 
-func listen() {
-  c, err := net.Listen("tcp", ":8085"); checkErr(err)
+func listen(listenPort int, storePath string) {
+  c, err := net.Listen("tcp", ":"+string(listenPort)); checkErr(err)
   fmt.Println(c)
   for {
     conn, err := c.Accept(); checkErr(err)
-    go handleConnection(conn)
+    go handleConnection(conn, storePath)
   }
 }
 
 func main() {
-    listen()
+  var storePath string
+  var listenPort int
+  flag.StringVar(&storePath, "path", "/home/forge/rfid_data", "")
+  flag.IntVar(&listenPort, "port", 8085, "")
+  flag.Parse()
+  listen(listenPort, storePath)
 }
