@@ -1,9 +1,11 @@
 #!/bin/bash
 
+store_path="/home/forge/rfid_data"
+
 case $1 in
 start)
-    mkdir -p /home/forge/rfid_data
-    ./small_tcp_server &>/dev/null &
+    mkdir -p $store_path
+    ./small_tcp_server -port=8085 -path=$store_path &>>/var/log/small_tcp_server.log &
     echo $! > /tmp/small_tcp_server.pid
 ;;
 stop)
