@@ -7,6 +7,7 @@ import (
     "io/ioutil"
     "time"
     "flag"
+    "strconv"
 )
 
 const(
@@ -37,13 +38,14 @@ func handleConnection(conn net.Conn, storePath string) {
   }
 
 // Write to file
-  //fmt.Println(time.Now().Unix())
-  filename := "data" + string(time.Now().Unix())
-  ioutil.WriteFile(storePath + filename, buff, 0777)
+  //fmt.Println(strconv.FormatInt(time.Now().Unix(), 10))
+  filename := storePath + "/data" + strconv.FormatInt(time.Now().Unix(), 10)
+  fmt.Println(filename)
+  ioutil.WriteFile(filename, buff, 0777)
 }
 
-func listen(listenPort int, storePath string) {
-  c, err := net.Listen("tcp", ":"+string(listenPort)); checkErr(err)
+func listen(listenPort string, storePath string) {
+  c, err := net.Listen("tcp", ":" + listenPort); checkErr(err)
   fmt.Println(c)
   for {
     conn, err := c.Accept(); checkErr(err)
@@ -53,9 +55,9 @@ func listen(listenPort int, storePath string) {
 
 func main() {
   var storePath string
-  var listenPort int
+  var listenPort string
   flag.StringVar(&storePath, "path", "/home/forge/rfid_data", "")
-  flag.IntVar(&listenPort, "port", 8085, "")
+  flag.StringVar(&listenPort, "port", "8085", "")
   flag.Parse()
   listen(listenPort, storePath)
 }
