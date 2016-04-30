@@ -11,11 +11,6 @@ import (
     "strconv"
 )
 
-const(
-  maxBufSize = 65535
-  tmpBufSize = 256
-)
-
 func checkErr(err error) {
   if (err != nil) {
     fmt.Println(err)
@@ -27,7 +22,6 @@ func handleConnection(conn net.Conn, storePath string) {
   for {
     msg, err := bufio.NewReader(conn).ReadBytes('\n')
     if (err != nil) && (err != io.EOF)  {
-      // Quit as we recieved io.EOF
       panic(err)
     }
     filename := storePath + "/data" + strconv.FormatInt(time.Now().Unix(), 10)
