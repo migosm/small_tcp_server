@@ -5,6 +5,7 @@ import (
     "net"
     "io"
     "io/ioutil"
+    "bufio"
     "time"
     "flag"
     "strconv"
@@ -22,30 +23,21 @@ func checkErr(err error) {
 }
 
 func handleConnection(conn net.Conn, storePath string) {
-  msg := make([]byte, tmpBufSize)
-  buff := []byte{}
   defer conn.Close()
   for {
-    n, err := conn.Read(msg)
+    msg, err := bufio.NewReader(conn).ReadBytes('\n')
     if (err != nil) && (err != io.EOF)  {
       // Quit as we recieved io.EOF
       panic(err)
     }
-    if n == 0 {
-      break
-    }
-    buff = append(buff, msg[:n]...)
+    filename := storePath + "/data" + strconv.FormatInt(time.Now().Unix(), 10)
+    fmt.Println(filename)
+    ioutil.WriteFile(filename, msg, 0777)
   }
-
-// Write to file
-  //fmt.Println(strconv.FormatInt(time.Now().Unix(), 10))
-  filename := storePath + "/data" + strconv.FormatInt(time.Now().Unix(), 10)
-  fmt.Println(filename)
-  ioutil.WriteFile(filename, buff, 0777)
 }
 
-func listen(listenPort string, storePath string) {
-  c, err := net.Listen("tcp", ":" + listenPort); checkErr(err)
+func run(listenHost string, listenPort string, storePath string) {
+  c, err := net.Listen("tcp", listenHost + ":" + listenPort); checkErr(err)
   fmt.Println(c)
   for {
     conn, err := c.Accept(); checkErr(err)
@@ -54,10 +46,11 @@ func listen(listenPort string, storePath string) {
 }
 
 func main() {
-  var storePath string
-  var listenPort string
+  var storePath, listenHost, listenPort string
+  //var listenPort string
   flag.StringVar(&storePath, "path", "/home/forge/rfid_data", "")
+  flag.StringVar(&listenHost, "host", "localhost", "")
   flag.StringVar(&listenPort, "port", "8085", "")
   flag.Parse()
-  listen(listenPort, storePath)
+  run(listenHost, listenPort, storePath)
 }
