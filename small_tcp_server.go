@@ -56,20 +56,17 @@ func handleXML(inmsg []byte) ([]byte, error) {
 func handleConnection(conn net.Conn, storePath string) {
   connectionReader := bufio.NewReader(conn)
   defer conn.Close()
-  for {
-    msg, err := connectionReader.ReadBytes('\n')
-    if (err != nil) && (err != io.EOF)  {
-      panic(err)
-    }
-    fmt.Println(string(msg))
-    filename := storePath + "/data" + strconv.FormatInt(time.Now().Unix(), 10)
-    fmt.Println(filename)
-    ioutil.WriteFile(filename, msg, 0777)
-    resp, err := handleXML(msg)
-    fmt.Println(string(resp))
-    _, err = conn.Write(resp); checkErr(err)
-    conn.Close()
+  msg, err := connectionReader.ReadBytes('\n')
+  if (err != nil) && (err != io.EOF)  {
+    panic(err)
   }
+  fmt.Println(string(msg))
+  filename := storePath + "/data" + strconv.FormatInt(time.Now().Unix(), 10)
+  fmt.Println(filename)
+  ioutil.WriteFile(filename, msg, 0777)
+  resp, err := handleXML(msg)
+  fmt.Println(string(resp))
+  _, err = conn.Write(resp); checkErr(err)
 }
 
 func run(listenHost string, listenPort string, storePath string) {
