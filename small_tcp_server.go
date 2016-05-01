@@ -82,7 +82,7 @@ func main() {
   var storePath, listenHost, listenPort string
   //var listenPort string
   flag.StringVar(&storePath, "path", "/home/forge/rfid_data", "")
-  flag.StringVar(&listenHost, "host", "localhost", "")
+  flag.StringVar(&listenHost, "host", "", "")
   flag.StringVar(&listenPort, "port", "8085", "")
   flag.Parse()
   run(listenHost, listenPort, storePath)
