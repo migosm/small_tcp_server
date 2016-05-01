@@ -68,6 +68,7 @@ func handleConnection(conn net.Conn, storePath string) {
     resp, err := handleXML(msg)
     fmt.Println(string(resp))
     _, err = conn.Write(resp); checkErr(err)
+    conn.Close()
   }
 }
 
