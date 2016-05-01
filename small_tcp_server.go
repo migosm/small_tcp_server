@@ -44,7 +44,7 @@ func parseRequest(msg []byte) xmlReq {
 func handleXML(inmsg []byte) ([]byte, error) {
   parsedXML := parseRequest(inmsg)
   if parsedXML.XMLName.Local == "" {
-    return []byte{0}, errors.New("XMLName is not defined")
+    return nil, errors.New("XMLName is not defined")
   }
   resp := xmlResp{Tag: "rfidVisibilityResponse", Num: parsedXML.Num}
   tmpl, err := template.New("xmlResponse").Parse(responseTemplate); checkErr(err)
@@ -61,11 +61,13 @@ func handleConnection(conn net.Conn, storePath string) {
       panic(err)
     }
     resp, err := handleXML(msg)
-    fmt.Println("rfidVisibilityResponse :", string(resp))
-    conn.Write(resp)
-    filename := storePath + "/data" + strconv.FormatInt(time.Now().Unix(), 10)
-    fmt.Println(filename)
-    ioutil.WriteFile(filename, msg, 0777)
+    if resp != nil {
+      fmt.Println("rfidVisibilityResponse :", string(resp))
+      conn.Write(resp)
+      filename := storePath + "/data" + strconv.FormatInt(time.Now().Unix(), 10)
+      fmt.Println(filename)
+      ioutil.WriteFile(filename, msg, 0777)
+    }
   }
 }
 
