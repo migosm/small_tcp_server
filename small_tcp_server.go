@@ -60,6 +60,7 @@ func handleConnection(conn net.Conn, storePath string) {
     if (err != nil) && (err != io.EOF)  {
       panic(err)
     }
+    fmt.Println(string(msg))
     resp, err := handleXML(msg)
     if resp != nil {
       fmt.Println("rfidVisibilityResponse :", string(resp))
