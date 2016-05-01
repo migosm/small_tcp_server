@@ -9,12 +9,48 @@ import (
     "time"
     "flag"
     "strconv"
+    "encoding/xml"
+    "text/template"
+    "bytes"
+    "errors"
 )
+
+type xmlReq struct {
+  XMLName xml.Name  `xml:"rfidVisibilityRequest"`
+  Host string `xml:"host,attr"`
+  Num int `xml:"num,attr"`
+  EventTag string `xml:"eventTag,attr"`
+}
+
+var responseTemplate = "<{{.Tag}} num={{.Num}} />\n"
+
+type xmlResp struct {
+  Tag string `xml:"rfidVisibilityResponse"`
+  Num int `xml:"num,attr"`
+}
 
 func checkErr(err error) {
   if (err != nil) {
     fmt.Println(err)
   }
+}
+
+func parseRequest(msg []byte) xmlReq {
+  var xmlData xmlReq
+  xml.Unmarshal(msg, &xmlData)
+  return xmlData
+}
+
+func handleXML(inmsg []byte) ([]byte, error) {
+  parsedXML := parseRequest(inmsg)
+  if parsedXML.XMLName.Local == "" {
+    return []byte{0}, errors.New("XMLName is not defined")
+  }
+  resp := xmlResp{Tag: "rfidVisibilityResponse", Num: parsedXML.Num}
+  tmpl, err := template.New("xmlResponse").Parse(responseTemplate); checkErr(err)
+  var buff bytes.Buffer
+  err = tmpl.Execute(&buff, resp); checkErr(err)
+  return buff.Bytes(), nil
 }
 
 func handleConnection(conn net.Conn, storePath string) {
@@ -24,9 +60,14 @@ func handleConnection(conn net.Conn, storePath string) {
     if (err != nil) && (err != io.EOF)  {
       panic(err)
     }
-    filename := storePath + "/data" + strconv.FormatInt(time.Now().Unix(), 10)
-    fmt.Println(filename)
-    ioutil.WriteFile(filename, msg, 0777)
+    resp, err := handleXML(msg)
+    if err == nil {
+      fmt.Println("rfidVisibilityResponse :", string(resp))
+      conn.Write(resp)
+      filename := storePath + "/data" + strconv.FormatInt(time.Now().Unix(), 10)
+      fmt.Println(filename)
+      ioutil.WriteFile(filename, msg, 0777)
+    }
   }
 }
 
