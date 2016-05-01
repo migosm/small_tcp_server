@@ -61,13 +61,11 @@ func handleConnection(conn net.Conn, storePath string) {
       panic(err)
     }
     resp, err := handleXML(msg)
-    if err == nil {
-      fmt.Println("rfidVisibilityResponse :", string(resp))
-      conn.Write(resp)
-      filename := storePath + "/data" + strconv.FormatInt(time.Now().Unix(), 10)
-      fmt.Println(filename)
-      ioutil.WriteFile(filename, msg, 0777)
-    }
+    fmt.Println("rfidVisibilityResponse :", string(resp))
+    conn.Write(resp)
+    filename := storePath + "/data" + strconv.FormatInt(time.Now().Unix(), 10)
+    fmt.Println(filename)
+    ioutil.WriteFile(filename, msg, 0777)
   }
 }
 
