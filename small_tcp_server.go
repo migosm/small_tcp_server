@@ -54,9 +54,10 @@ func handleXML(inmsg []byte) ([]byte, error) {
 }
 
 func handleConnection(conn net.Conn, storePath string) {
+  connectionReader := bufio.NewReader(conn)
   defer conn.Close()
   for {
-    msg, err := bufio.NewReader(conn).ReadBytes('\n')
+    msg, err := connectionReader.ReadBytes('\n')
     if (err != nil) && (err != io.EOF)  {
       panic(err)
     }
