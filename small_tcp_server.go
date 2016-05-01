@@ -66,6 +66,7 @@ func handleConnection(conn net.Conn, storePath string) {
     ioutil.WriteFile(filename, msg, 0777)
     resp, err := handleXML(msg)
     fmt.Println(string(resp))
+    _, err = conn.Write(resp); checkErr(err)
   }
 }
 
