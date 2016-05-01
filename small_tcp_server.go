@@ -61,6 +61,7 @@ func handleConnection(conn net.Conn, storePath string) {
       panic(err)
     }
     fmt.Println(string(msg))
+    /*
     resp, err := handleXML(msg)
     if resp != nil {
       fmt.Println("rfidVisibilityResponse :", string(resp))
@@ -69,6 +70,10 @@ func handleConnection(conn net.Conn, storePath string) {
       fmt.Println(filename)
       ioutil.WriteFile(filename, msg, 0777)
     }
+    */
+    filename := storePath + "/data" + strconv.FormatInt(time.Now().Unix(), 10)
+    fmt.Println(filename)
+    ioutil.WriteFile(filename, msg, 0777)
   }
 }
 
