@@ -60,7 +60,6 @@ func handleConnection(conn net.Conn, storePath string) error {
   if (err != nil) && (err != io.EOF)  {
     //panic(err)
     fmt.Println(err)
-    conn.Close()
     return err
   }
 
