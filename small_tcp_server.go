@@ -1,7 +1,7 @@
 package main
 
 import (
-    "fmt"
+    _ "fmt"
     "net"
     "io"
     "io/ioutil"
@@ -13,6 +13,18 @@ import (
     "text/template"
     "bytes"
     "errors"
+    "os"
+    "log"
+    "github.com/nutrun/lentil"
+)
+
+// Log handler
+var (
+    Trace   *log.Logger
+    Info    *log.Logger
+    Warning *log.Logger
+    Error   *log.Logger
+    responseTemplate = "<{{.Tag}} num={{.Num}} />\n"
 )
 
 type xmlReq struct {
@@ -22,16 +34,38 @@ type xmlReq struct {
   EventTag string `xml:"eventTag,attr"`
 }
 
-var responseTemplate = "<{{.Tag}} num={{.Num}} />\n"
-
 type xmlResp struct {
   Tag string `xml:"rfidVisibilityResponse"`
   Num int `xml:"num,attr"`
 }
 
+//
+func initLog(
+    traceHandle io.Writer,
+    infoHandle io.Writer,
+    warningHandle io.Writer,
+    errorHandle io.Writer) {
+
+    Trace = log.New(traceHandle,
+        "TRACE: ",
+        log.Ldate|log.Ltime|log.Lshortfile)
+
+    Info = log.New(infoHandle,
+        "INFO: ",
+        log.Ldate|log.Ltime|log.Lshortfile)
+
+    Warning = log.New(warningHandle,
+        "WARNING: ",
+        log.Ldate|log.Ltime|log.Lshortfile)
+
+    Error = log.New(errorHandle,
+        "ERROR: ",
+        log.Ldate|log.Ltime|log.Lshortfile)
+}
+
 func checkErr(err error) {
   if (err != nil) {
-    fmt.Println(err)
+    Error.Println(err)
   }
 }
 
@@ -53,36 +87,49 @@ func handleXML(inmsg []byte) ([]byte, error) {
   return buff.Bytes(), nil
 }
 
-func handleConnection(conn net.Conn, storePath string) error {
+func handleConnection(conn net.Conn, storePath string, beanstalkdChan chan string) error {
   connectionReader := bufio.NewReader(conn)
   defer conn.Close()
   msg, err := connectionReader.ReadBytes('\n')
   if (err != nil) && (err != io.EOF)  {
-    //panic(err)
-    fmt.Println(err)
+    Error.Println(err)
     return err
   }
 
-  //fmt.Println(string(msg))
+  Info.Println(string(msg))
   filename := storePath + "/data" + strconv.FormatInt(time.Now().Unix(), 10)
-  //fmt.Println(filename)
+  beanstalkdChan <-filename
   ioutil.WriteFile(filename, msg, 0777)
   resp, err := handleXML(msg)
-  //fmt.Println(string(resp))
+  Info.Println(string(resp))
   _, err = conn.Write(resp); checkErr(err)
   return nil
 }
 
-func run(listenHost string, listenPort string, storePath string) {
-  c, err := net.Listen("tcp", listenHost + ":" + listenPort); checkErr(err)
-  fmt.Println(c)
+func handleBeanstalkd(msgChan chan string) {
+  conn, err := lentil.Dial("0.0.0.0:11300"); checkErr(err)
+  Info.Println(conn)
   for {
-    conn, err := c.Accept(); checkErr(err)
-    go handleConnection(conn, storePath)
+    msg := <-msgChan
+    Info.Println("Beanstalkd: ", msg)
+  }
+
+}
+
+func run(listenHost string, listenPort string, storePath string) {
+  // Prepare Beanstalkd
+  beanstalkdChan := make(chan string, 256)
+  go handleBeanstalkd(beanstalkdChan)
+  sock, err := net.Listen("tcp", listenHost + ":" + listenPort); checkErr(err)
+  Info.Println(sock)
+  for {
+    conn, err := sock.Accept(); checkErr(err)
+    go handleConnection(conn, storePath, beanstalkdChan)
   }
 }
 
 func main() {
+  initLog(ioutil.Discard, os.Stdout, os.Stdout, os.Stderr)
   var storePath, listenHost, listenPort string
   //var listenPort string
   flag.StringVar(&storePath, "path", "/home/forge/rfid_data", "")
