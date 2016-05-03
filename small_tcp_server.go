@@ -95,8 +95,7 @@ func handleConnection(conn net.Conn, storePath string, beanstalkdChan chan strin
     Error.Println(err)
     return err
   }
-
-  //Info.Println(string(msg))
+  Info.Println("Msg length: ", string(len(msg)))
   filename := storePath + "/data" + strconv.FormatInt(time.Now().Unix(), 10)
   beanstalkdChan <-filename
   ioutil.WriteFile(filename, msg, 0777)
