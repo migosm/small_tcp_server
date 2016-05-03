@@ -96,7 +96,7 @@ func handleConnection(conn net.Conn, storePath string, beanstalkdChan chan strin
     return err
   }
 
-  Info.Println(string(msg))
+  //Info.Println(string(msg))
   filename := storePath + "/data" + strconv.FormatInt(time.Now().Unix(), 10)
   beanstalkdChan <-filename
   ioutil.WriteFile(filename, msg, 0777)
@@ -108,10 +108,12 @@ func handleConnection(conn net.Conn, storePath string, beanstalkdChan chan strin
 
 func handleBeanstalkd(msgChan chan string) {
   conn, err := lentil.Dial("0.0.0.0:11300"); checkErr(err)
+  conn.Use("rfid_data")
   Info.Println(conn)
   for {
     msg := <-msgChan
     Info.Println("Beanstalkd: ", msg)
+    conn.Put(0, 0, 0, []byte(msg))
   }
 
 }
