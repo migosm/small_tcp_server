@@ -99,7 +99,7 @@ func handleConnection(conn net.Conn, storePath string, beanstalkdChan chan strin
   if len(msg) == 0 {
     return errors.New("Don't do anything with zero length messages")
   }
-  filename := storePath + "/data" + strconv.FormatInt(time.Now().Unix(), 10)
+  filename := storePath + "/data" + strconv.FormatInt(time.Now().UnixNano(), 10)
   beanstalkdChan <-filename
   ioutil.WriteFile(filename, msg, 0777)
   resp, err := handleXML(msg)
