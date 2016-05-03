@@ -107,7 +107,10 @@ func handleConnection(conn net.Conn, storePath string, beanstalkdChan chan strin
 }
 
 func handleBeanstalkd(msgChan chan string) {
-  conn, err := lentil.Dial("0.0.0.0:11300"); checkErr(err)
+  conn, err := lentil.Dial("0.0.0.0:11300")
+  if err != nil {
+    Error.Fatal(err)
+  }
   conn.Use("rfid_data")
   Info.Println(conn)
   for {
