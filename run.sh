@@ -7,6 +7,7 @@ start)
     mkdir -p $store_path
     supervisorctl reread
     supervisorctl update
+    supervisorctl start small_tcp_server
 ;;
 stop)
     supervisorctl stop small_tcp_server
