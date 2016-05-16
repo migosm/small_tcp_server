@@ -24,7 +24,7 @@ var (
     Info    *log.Logger
     Warning *log.Logger
     Error   *log.Logger
-    responseTemplate = "<{{.Tag}} num={{.Num}} />\n"
+    responseTemplate = "<{{.Tag}} num=\"{{.Num}}\" />\n"
 )
 
 type xmlReq struct {
